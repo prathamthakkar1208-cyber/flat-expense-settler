@@ -1,22 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Add Flatmate</title>
 
     <style>
-
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
             padding: 20px;
             background: #f5f7fb;
@@ -25,18 +18,18 @@
 
         .card {
             background: white;
-            padding: 25px;
             border-radius: 16px;
+            padding: 25px;
             margin-top: 30px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.06);
         }
 
         input {
             width: 100%;
             box-sizing: border-box;
-            padding: 14px;
-            margin-top: 10px;
-            margin-bottom: 15px;
+            padding: 13px;
+            margin-top: 8px;
+            margin-bottom: 18px;
             border: 1px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
@@ -59,66 +52,69 @@
             text-decoration: none;
         }
 
-        .message {
-            background: #e7f7ec;
+        .error {
+            background: #ffe8e8;
+            color: #c62828;
             padding: 12px;
             border-radius: 10px;
             margin-bottom: 15px;
         }
 
-    </style>
+        h1 {
+            margin-bottom: 5px;
+        }
 
+        .subtitle {
+            color: #687386;
+        }
+    </style>
 </head>
 
 <body>
 
+<div class="card">
+
     <h1>👤 Add Flatmate</h1>
 
-    <div class="card">
+    <p class="subtitle">
+        Add the people who share expenses with you.
+    </p>
 
-        {% if messages %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="error">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
-            {% for message in messages %}
+    <form method="POST">
 
-                <div class="message">
-                    {{ message }}
-                </div>
+        {% csrf_token %}
 
-            {% endfor %}
+        <label for="name">
+            <strong>Flatmate Name</strong>
+        </label>
 
-        {% endif %}
-
-        <form method="POST">
-
-            {% csrf_token %}
-
-            <label for="name">
-                Flatmate Name
-            </label>
-
-            <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Enter flatmate name"
-                required
-            >
-
-            <button type="submit">
-                Add Flatmate
-            </button>
-
-        </form>
-
-        <a
-            class="back"
-            href="{% url 'home' %}"
+        <input
+            type="text"
+            id="name"
+            name="name"
+            placeholder="e.g. Pratham"
+            required
         >
-            ← Back to Home
-        </a>
 
-    </div>
+        <button type="submit">
+            Add Flatmate 👤
+        </button>
+
+    </form>
+
+    <a class="back" href="{% url 'home' %}">
+        ← Back to Home
+    </a>
+
+</div>
 
 </body>
-
 </html>
