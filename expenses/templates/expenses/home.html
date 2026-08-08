@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Flat Expense Settler</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #687386;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 18px 0;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .positive {
+            color: #16803c;
+            font-weight: bold;
+        }
+
+        .negative {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 13px 18px;
+            border-radius: 10px;
+            background: #172033;
+            color: white;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .expense {
+            border-top: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .expense:first-child {
+            border-top: none;
+        }
+
+        .message {
+            background: #e7f7ec;
+            padding: 12px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Flat Expense Settler 💰</h1>
+
+    <div class="subtitle">
+        Track expenses. Split fairly. Settle easily.
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="card message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <div class="card">
+
+        <h2>Current Balance</h2>
+
+        {% for item in balance_data %}
+
+            <p>
+
+                <strong>
+                    {{ item.name }}
+                </strong>
+
+                {% if item.balance_paise > 0 %}
+
+                    <span class="positive">
+                        is owed ₹{{ item.balance_rupees|floatformat:2 }}
+                    </span>
+
+                {% elif item.balance_paise < 0 %}
+
+                    <span class="negative">
+                        owes ₹{{ item.balance_rupees|floatformat:2 }}
+                    </span>
+
+                {% else %}
+
+                    <span>
+                        is square ✅
+                    </span>
+
+                {% endif %}
+
+            </p>
+
+        {% empty %}
+
+            <p>
+                No people added yet.
+            </p>
+
+        {% endfor %}
+
+
+        <a
+    class="button"
+    href="{% url 'add_expense' %}"
+>
+    + Add Expense
+</a>
+
+<a
+    class="button"
+    href="{% url 'settle_up' %}"
+>
+    💸 Settle Up
+</a>
+    </div>
+
+
+    <div class="card">
+
+        <h2>Recent Expenses</h2>
+
+        {% for expense in recent_expenses %}
+
+            <div class="expense">
+
+                <strong>
+                    {{ expense.description }}
+                </strong>
+
+                <div>
+                    ₹{{ expense.amount_rupees|floatformat:2 }}
+                    · paid by {{ expense.paid_by.name }}
+                </div>
+
+                <small>
+                    {{ expense.expense_date }}
+                </small>
+
+            </div>
+
+        {% empty %}
+
+            <p>
+                No expenses yet.
+            </p>
+
+        {% endfor %}
+
+    </div>
+
+</body>
+</html>

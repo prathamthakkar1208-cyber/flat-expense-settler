@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Settle Up</title>
+
+
+    <style>
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            max-width: 650px;
+
+            margin: 0 auto;
+
+            padding: 20px;
+
+            background: #f5f7fb;
+
+            color: #172033;
+
+        }
+
+
+        .card {
+
+            background: white;
+
+            padding: 22px;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 4px 18px rgba(0, 0, 0, 0.06);
+
+        }
+
+
+        label {
+
+            display: block;
+
+            margin-top: 18px;
+
+            font-weight: bold;
+
+        }
+
+
+        select,
+        input {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+            padding: 12px;
+
+            margin-top: 7px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 9px;
+
+            font-size: 16px;
+
+        }
+
+
+        button {
+
+            width: 100%;
+
+            margin-top: 22px;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #172033;
+
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+
+        }
+
+
+        .back {
+
+            display: inline-block;
+
+            margin-bottom: 20px;
+
+            color: #172033;
+
+            text-decoration: none;
+
+        }
+
+
+        .info {
+
+            background: #eef3ff;
+
+            padding: 14px;
+
+            border-radius: 10px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .error {
+
+            background: #ffe8e8;
+
+            color: #a40000;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            margin-bottom: 15px;
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<a
+    class="back"
+    href="{% url 'home' %}"
+>
+    ← Back to dashboard
+</a>
+
+
+<div class="card">
+
+
+    <h1>
+        Settle Up 💸
+    </h1>
+
+
+    <div class="info">
+
+        When money actually changes hands,
+        record it here.
+
+        The settlement will automatically
+        reduce the outstanding balance.
+
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="error">
+
+                {{ message }}
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        <label>
+            Who paid?
+        </label>
+
+        <select
+            name="paid_by"
+            required
+        >
+
+            {% for person in people %}
+
+                <option
+                    value="{{ person.id }}"
+                >
+
+                    {{ person.name }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>
+            Who received the money?
+        </label>
+
+        <select
+            name="paid_to"
+            required
+        >
+
+            {% for person in people %}
+
+                <option
+                    value="{{ person.id }}"
+                >
+
+                    {{ person.name }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>
+            Amount (₹)
+        </label>
+
+        <input
+            type="number"
+            name="amount"
+            step="0.01"
+            min="0.01"
+            placeholder="5000.00"
+            required
+        >
+
+
+        <label>
+            Note (optional)
+        </label>
+
+        <input
+            type="text"
+            name="note"
+            maxlength="200"
+            placeholder="Monthly settlement"
+        >
+
+
+        <button type="submit">
+            Record Settlement
+        </button>
+
+
+    </form>
+
+</div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Add Expense</title>
+
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        }
+
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+
+        input,
+        select {
+
+            width: 100%;
+            box-sizing: border-box;
+
+            padding: 12px;
+
+            margin-top: 7px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 9px;
+
+            font-size: 16px;
+        }
+
+
+        .button {
+
+            margin-top: 22px;
+
+            padding: 13px 18px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #172033;
+
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+
+        .error {
+
+            background: #ffe8e8;
+
+            color: #a40000;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            margin-bottom: 15px;
+        }
+
+
+        .back {
+
+            display: inline-block;
+
+            margin-bottom: 20px;
+
+            color: #172033;
+
+            text-decoration: none;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<a class="back" href="{% url 'home' %}">
+    ← Back
+</a>
+
+
+<div class="card">
+
+
+    <h1>Add Expense</h1>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="error">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        <label>
+            What was it for?
+        </label>
+
+        <input
+            type="text"
+            name="description"
+            placeholder="Groceries"
+            required
+        >
+
+
+        <label>
+            Total amount (₹)
+        </label>
+
+        <input
+            type="number"
+            name="amount"
+            step="0.01"
+            min="0.01"
+            placeholder="1000.00"
+            required
+        >
+
+
+        <label>
+            Who paid?
+        </label>
+
+        <select name="paid_by" required>
+
+            {% for person in people %}
+
+                <option value="{{ person.id }}">
+                    {{ person.name }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>
+            Date
+        </label>
+
+        <input
+            type="date"
+            name="expense_date"
+            value="{{ today }}"
+            required
+        >
+
+
+        <h2>
+            How should it be split?
+        </h2>
+
+
+        {% for person in people %}
+
+            <label>
+                {{ person.name }}'s share (₹)
+            </label>
+
+            <input
+                type="number"
+                name="share_{{ person.id }}"
+                step="0.01"
+                min="0"
+                value="0"
+                required
+            >
+
+        {% endfor %}
+
+
+        <button
+            class="button"
+            type="submit"
+        >
+            Save Expense
+        </button>
+
+
+    </form>
+
+
+</div>
+
+
+</body>
+</html>
