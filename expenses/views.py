@@ -8,6 +8,19 @@ from django.utils import timezone
 from .models import Expense, ExpenseShare, Person, Settlement
 
 
+# --------------------------------------------------
+# DEFAULT FLATMATES
+# --------------------------------------------------
+
+def ensure_flatmates():
+    Person.objects.get_or_create(name="Pratham Thakkar")
+    Person.objects.get_or_create(name="Shrimir")
+
+
+# --------------------------------------------------
+# MONEY HELPER
+# --------------------------------------------------
+
 def money_to_paise(value):
     try:
         amount = Decimal(str(value)).quantize(Decimal("0.01"))
@@ -20,23 +33,34 @@ def money_to_paise(value):
     return int(amount * 100)
 
 
+# --------------------------------------------------
+# HOME
+# --------------------------------------------------
+
 def home(request):
-    people = list(Person.objects.all().order_by("id"))
+
+    # Automatically create both flatmates
+    ensure_flatmates()
+
+    people = list(
+        Person.objects.all().order_by("id")
+    )
 
     balances = {
         person.id: 0
         for person in people
     }
 
-    # Expenses affect the balance.
+    # Expenses
     for expense in Expense.objects.all():
 
         balances[expense.paid_by_id] += expense.amount_paise
 
         for share in expense.shares.all():
+
             balances[share.person_id] -= share.amount_paise
 
-    # Settlements affect the balance.
+    # Settlements
     for settlement in Settlement.objects.all():
 
         balances[settlement.paid_by_id] += settlement.amount_paise
@@ -85,18 +109,17 @@ def home(request):
     )
 
 
+# --------------------------------------------------
+# ADD EXPENSE
+# --------------------------------------------------
+
 def add_expense(request):
 
-    people = list(Person.objects.all().order_by("id"))
+    ensure_flatmates()
 
-    if len(people) < 2:
-
-        messages.error(
-            request,
-            "Please add both flatmates before adding an expense."
-        )
-
-        return redirect("home")
+    people = list(
+        Person.objects.all().order_by("id")
+    )
 
     if request.method == "POST":
 
@@ -112,8 +135,11 @@ def add_expense(request):
 
         paid_by_id = request.POST.get("paid_by")
 
-        expense_date = request.POST.get("expense_date")
+        expense_date = request.POST.get(
+            "expense_date"
+        )
 
+        # Description validation
         if not description:
 
             messages.error(
@@ -130,6 +156,7 @@ def add_expense(request):
                 },
             )
 
+        # Amount validation
         try:
 
             amount_paise = money_to_paise(amount)
@@ -150,11 +177,13 @@ def add_expense(request):
                 },
             )
 
+        # Paid by validation
         paid_by = get_object_or_404(
             Person,
             id=paid_by_id
         )
 
+        # Get shares
         share_values = {}
 
         try:
@@ -184,6 +213,7 @@ def add_expense(request):
                 },
             )
 
+        # Check split
         if sum(share_values.values()) != amount_paise:
 
             messages.error(
@@ -200,9 +230,11 @@ def add_expense(request):
                 },
             )
 
+        # Default date
         if not expense_date:
             expense_date = timezone.localdate()
 
+        # Save expense
         with transaction.atomic():
 
             expense = Expense.objects.create(
@@ -237,26 +269,27 @@ def add_expense(request):
     )
 
 
+# --------------------------------------------------
+# SETTLE UP
+# --------------------------------------------------
+
 def settle_up(request):
+
+    ensure_flatmates()
 
     people = list(
         Person.objects.all().order_by("id")
     )
 
-    if len(people) < 2:
-
-        messages.error(
-            request,
-            "Please add both flatmates first."
-        )
-
-        return redirect("home")
-
     if request.method == "POST":
 
-        paid_by_id = request.POST.get("paid_by")
+        paid_by_id = request.POST.get(
+            "paid_by"
+        )
 
-        paid_to_id = request.POST.get("paid_to")
+        paid_to_id = request.POST.get(
+            "paid_to"
+        )
 
         amount = request.POST.get(
             "amount",
@@ -268,6 +301,7 @@ def settle_up(request):
             ""
         ).strip()
 
+        # Same person check
         if paid_by_id == paid_to_id:
 
             messages.error(
@@ -277,9 +311,12 @@ def settle_up(request):
 
             return redirect("settle_up")
 
+        # Amount validation
         try:
 
-            amount_paise = money_to_paise(amount)
+            amount_paise = money_to_paise(
+                amount
+            )
 
         except ValueError as error:
 
@@ -307,6 +344,7 @@ def settle_up(request):
             id=paid_to_id
         )
 
+        # Save settlement
         Settlement.objects.create(
             paid_by=paid_by,
             paid_to=paid_to,
