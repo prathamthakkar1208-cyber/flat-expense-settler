@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,6 +51,11 @@
             color: white;
             text-decoration: none;
             margin-top: 10px;
+            margin-right: 8px;
+        }
+
+        .button:hover {
+            opacity: 0.9;
         }
 
         .expense {
@@ -66,6 +72,15 @@
             padding: 12px;
             border-radius: 10px;
         }
+
+        .person {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .person:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -77,6 +92,8 @@
         Track expenses. Split fairly. Settle easily.
     </div>
 
+
+    <!-- Messages -->
 
     {% if messages %}
 
@@ -91,13 +108,15 @@
     {% endif %}
 
 
+    <!-- Current Balance -->
+
     <div class="card">
 
         <h2>Current Balance</h2>
 
         {% for item in balance_data %}
 
-            <p>
+            <div class="person">
 
                 <strong>
                     {{ item.name }}
@@ -123,7 +142,7 @@
 
                 {% endif %}
 
-            </p>
+            </div>
 
         {% empty %}
 
@@ -134,21 +153,33 @@
         {% endfor %}
 
 
-        <a
-    class="button"
-    href="{% url 'add_expense' %}"
->
-    + Add Expense
-</a>
+        <!-- Buttons -->
 
-<a
-    class="button"
-    href="{% url 'settle_up' %}"
->
-    💸 Settle Up
-</a>
+        <a
+            class="button"
+            href="{% url 'add_person' %}"
+        >
+            👤 Add Flatmate
+        </a>
+
+        <a
+            class="button"
+            href="{% url 'add_expense' %}"
+        >
+            + Add Expense 💸
+        </a>
+
+        <a
+            class="button"
+            href="{% url 'settle_up' %}"
+        >
+            💸 Settle Up
+        </a>
+
     </div>
 
+
+    <!-- Recent Expenses -->
 
     <div class="card">
 
@@ -183,5 +214,50 @@
 
     </div>
 
+
+    <!-- Recent Settlements -->
+
+    <div class="card">
+
+        <h2>Recent Settlements</h2>
+
+        {% for settlement in recent_settlements %}
+
+            <div class="expense">
+
+                <strong>
+                    {{ settlement.paid_by.name }}
+                    → {{ settlement.paid_to.name }}
+                </strong>
+
+                <div>
+                    ₹{{ settlement.amount_rupees|floatformat:2 }}
+                </div>
+
+                {% if settlement.note %}
+                    <small>
+                        {{ settlement.note }}
+                    </small>
+                {% endif %}
+
+                <br>
+
+                <small>
+                    {{ settlement.settlement_date }}
+                </small>
+
+            </div>
+
+        {% empty %}
+
+            <p>
+                No settlements yet.
+            </p>
+
+        {% endfor %}
+
+    </div>
+
 </body>
+
 </html>
