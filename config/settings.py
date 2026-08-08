@@ -23,9 +23,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-bd0@zvbb^_f6o150o2twix+0x9d6%n9_03baur)m#a9z2wi0$z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "flat-expense-settler.onrender.com",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://flat-expense-settler.onrender.com",
+]
 
 
 # Application definition
