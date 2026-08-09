@@ -86,24 +86,27 @@ def add_person(request):
         name = request.POST.get("name", "").strip()
 
         if not name:
-            messages.error(
+            messages.error(request, "Please enter a name.")
+            return render(
                 request,
-                "Please enter a name."
+                "expenses/add_person.html"
             )
-            return redirect("add_person")
 
         if Person.objects.filter(name__iexact=name).exists():
             messages.error(
                 request,
-                "This person already exists."
+                "This person is already added."
             )
-            return redirect("add_person")
+            return render(
+                request,
+                "expenses/add_person.html"
+            )
 
         Person.objects.create(name=name)
 
         messages.success(
             request,
-            f"{name} added successfully! 👤"
+            f"{name} added successfully! ✅"
         )
 
         return redirect("home")
@@ -115,9 +118,7 @@ def add_person(request):
 
 
 def add_expense(request):
-    people = list(
-        Person.objects.all().order_by("id")
-    )
+    people = list(Person.objects.all().order_by("id"))
 
     if len(people) < 2:
         messages.error(
@@ -127,7 +128,6 @@ def add_expense(request):
         return redirect("home")
 
     if request.method == "POST":
-
         description = request.POST.get(
             "description",
             ""
@@ -146,33 +146,13 @@ def add_expense(request):
                 request,
                 "Please enter what the expense was for."
             )
-
-            return render(
-                request,
-                "expenses/add_expense.html",
-                {
-                    "people": people,
-                    "today": timezone.localdate().isoformat(),
-                },
-            )
+            return redirect("add_expense")
 
         try:
             amount_paise = money_to_paise(amount)
-
         except ValueError as error:
-            messages.error(
-                request,
-                str(error)
-            )
-
-            return render(
-                request,
-                "expenses/add_expense.html",
-                {
-                    "people": people,
-                    "today": timezone.localdate().isoformat(),
-                },
-            )
+            messages.error(request, str(error))
+            return redirect("add_expense")
 
         paid_by = get_object_or_404(
             Person,
@@ -189,42 +169,24 @@ def add_expense(request):
                         "0"
                     )
                 )
-
         except ValueError:
             messages.error(
                 request,
                 "Please enter valid amounts for all shares."
             )
-
-            return render(
-                request,
-                "expenses/add_expense.html",
-                {
-                    "people": people,
-                    "today": timezone.localdate().isoformat(),
-                },
-            )
+            return redirect("add_expense")
 
         if sum(share_values.values()) != amount_paise:
             messages.error(
                 request,
                 "The split amounts must add up exactly to the total expense."
             )
-
-            return render(
-                request,
-                "expenses/add_expense.html",
-                {
-                    "people": people,
-                    "today": timezone.localdate().isoformat(),
-                },
-            )
+            return redirect("add_expense")
 
         if not expense_date:
             expense_date = timezone.localdate()
 
         with transaction.atomic():
-
             expense = Expense.objects.create(
                 description=description,
                 amount_paise=amount_paise,
@@ -269,7 +231,6 @@ def settle_up(request):
         return redirect("home")
 
     if request.method == "POST":
-
         paid_by_id = request.POST.get("paid_by")
         paid_to_id = request.POST.get("paid_to")
 
@@ -292,21 +253,9 @@ def settle_up(request):
 
         try:
             amount_paise = money_to_paise(amount)
-
         except ValueError as error:
-            messages.error(
-                request,
-                str(error)
-            )
-
-            return render(
-                request,
-                "expenses/settle_up.html",
-                {
-                    "people": people,
-                    "today": timezone.localdate().isoformat(),
-                },
-            )
+            messages.error(request, str(error))
+            return redirect("settle_up")
 
         paid_by = get_object_or_404(
             Person,
