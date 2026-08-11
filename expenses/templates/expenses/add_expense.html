@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
@@ -8,7 +9,6 @@
           content="width=device-width, initial-scale=1.0">
 
     <title>Add Expense</title>
-
 
     <style>
 
@@ -21,6 +21,14 @@
             color: #172033;
         }
 
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #687386;
+            margin-bottom: 22px;
+        }
 
         .card {
             background: white;
@@ -29,75 +37,104 @@
             box-shadow: 0 4px 18px rgba(0,0,0,0.06);
         }
 
-
         label {
             display: block;
             margin-top: 15px;
             font-weight: bold;
         }
 
-
         input,
         select {
-
             width: 100%;
             box-sizing: border-box;
-
             padding: 12px;
-
             margin-top: 7px;
-
             border: 1px solid #ddd;
-
             border-radius: 9px;
-
             font-size: 16px;
         }
 
+        .split-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .split-option {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            background: #fafafa;
+            font-weight: bold;
+        }
+
+        .split-option:hover {
+            background: #f0f2f7;
+        }
+
+        .split-option.active {
+            background: #172033;
+            color: white;
+            border-color: #172033;
+        }
+
+        .shares {
+            margin-top: 20px;
+        }
+
+        .share-row {
+            margin-bottom: 12px;
+        }
+
+        .total-check {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f5f7fb;
+            font-weight: bold;
+        }
+
+        .valid {
+            color: #16803c;
+        }
+
+        .invalid {
+            color: #c62828;
+        }
 
         .button {
-
             margin-top: 22px;
-
             padding: 13px 18px;
-
             border: none;
-
             border-radius: 10px;
-
             background: #172033;
-
             color: white;
-
             font-size: 16px;
-
             cursor: pointer;
+            width: 100%;
         }
 
+        .button:hover {
+            opacity: 0.9;
+        }
 
         .error {
-
             background: #ffe8e8;
-
             color: #a40000;
-
             padding: 12px;
-
             border-radius: 10px;
-
             margin-bottom: 15px;
         }
 
-
         .back {
-
             display: inline-block;
-
             margin-bottom: 20px;
-
             color: #172033;
-
             text-decoration: none;
+            font-weight: bold;
         }
 
     </style>
@@ -107,16 +144,15 @@
 
 <body>
 
+    <a class="back" href="{% url 'home' %}">
+        ← Back to Home
+    </a>
 
-<a class="back" href="{% url 'home' %}">
-    ← Back
-</a>
+    <h1>Add Expense 💸</h1>
 
-
-<div class="card">
-
-
-    <h1>Add Expense</h1>
+    <div class="subtitle">
+        Add an expense and choose how you want to split it.
+    </div>
 
 
     {% if messages %}
@@ -132,102 +168,335 @@
     {% endif %}
 
 
-    <form method="post">
+    <div class="card">
 
-        {% csrf_token %}
+        <form method="post">
 
+            {% csrf_token %}
 
-        <label>
-            What was it for?
-        </label>
-
-        <input
-            type="text"
-            name="description"
-            placeholder="Groceries"
-            required
-        >
-
-
-        <label>
-            Total amount (₹)
-        </label>
-
-        <input
-            type="number"
-            name="amount"
-            step="0.01"
-            min="0.01"
-            placeholder="1000.00"
-            required
-        >
-
-
-        <label>
-            Who paid?
-        </label>
-
-        <select name="paid_by" required>
-
-            {% for person in people %}
-
-                <option value="{{ person.id }}">
-                    {{ person.name }}
-                </option>
-
-            {% endfor %}
-
-        </select>
-
-
-        <label>
-            Date
-        </label>
-
-        <input
-            type="date"
-            name="expense_date"
-            value="{{ today }}"
-            required
-        >
-
-
-        <h2>
-            How should it be split?
-        </h2>
-
-
-        {% for person in people %}
 
             <label>
-                {{ person.name }}'s share (₹)
+                What was it for?
+            </label>
+
+            <input
+                type="text"
+                name="description"
+                placeholder="Groceries"
+                required
+            >
+
+
+            <label>
+                Total amount (₹)
             </label>
 
             <input
                 type="number"
-                name="share_{{ person.id }}"
+                id="totalAmount"
+                name="amount"
                 step="0.01"
-                min="0"
-                value="0"
+                min="0.01"
+                placeholder="1000.00"
                 required
             >
 
-        {% endfor %}
+
+            <label>
+                Who paid?
+            </label>
+
+            <select name="paid_by" required>
+
+                {% for person in people %}
+
+                    <option value="{{ person.id }}">
+                        {{ person.name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
 
 
-        <button
-            class="button"
-            type="submit"
-        >
-            Save Expense
-        </button>
+            <label>
+                Date
+            </label>
+
+            <input
+                type="date"
+                name="expense_date"
+                value="{{ today }}"
+                required
+            >
 
 
-    </form>
+            <h2>
+                How should it be split?
+            </h2>
 
 
-</div>
+            <div class="split-options">
 
+                <div
+                    class="split-option active"
+                    onclick="setSplit('5050', this)"
+                >
+                    50 / 50
+                </div>
+
+                <div
+                    class="split-option"
+                    onclick="setSplit('1000', this)"
+                >
+                    100 / 0
+                </div>
+
+                <div
+                    class="split-option"
+                    onclick="setSplit('custom', this)"
+                >
+                    Custom
+                </div>
+
+            </div>
+
+
+            <div class="shares">
+
+                {% for person in people %}
+
+                    <div class="share-row">
+
+                        <label>
+                            {{ person.name }}'s share (₹)
+                        </label>
+
+                        <input
+                            type="number"
+                            class="share-input"
+                            id="share_{{ person.id }}"
+                            name="share_{{ person.id }}"
+                            step="0.01"
+                            min="0"
+                            value="0"
+                            required
+                        >
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <div
+                id="totalCheck"
+                class="total-check"
+            >
+                Enter total amount first.
+            </div>
+
+
+            <button
+                class="button"
+                type="submit"
+            >
+                Save Expense ✅
+            </button>
+
+        </form>
+
+    </div>
+
+
+<script>
+
+    const totalInput = document.getElementById("totalAmount");
+
+    const shareInputs =
+        document.querySelectorAll(".share-input");
+
+    const totalCheck =
+        document.getElementById("totalCheck");
+
+
+    function setSplit(type, element) {
+
+        document
+            .querySelectorAll(".split-option")
+            .forEach(option => {
+                option.classList.remove("active");
+            });
+
+        element.classList.add("active");
+
+
+        const total =
+            parseFloat(totalInput.value) || 0;
+
+
+        if (shareInputs.length < 2) {
+            return;
+        }
+
+
+        if (type === "5050") {
+
+            const half =
+                (total / 2).toFixed(2);
+
+            shareInputs[0].value = half;
+            shareInputs[1].value = half;
+
+        }
+
+
+        else if (type === "1000") {
+
+            shareInputs[0].value =
+                total.toFixed(2);
+
+            shareInputs[1].value =
+                "0.00";
+
+        }
+
+
+        else if (type === "custom") {
+
+            shareInputs[0].value = "";
+            shareInputs[1].value = "";
+
+            shareInputs[0].focus();
+
+        }
+
+
+        checkTotal();
+
+    }
+
+
+    function checkTotal() {
+
+        const total =
+            parseFloat(totalInput.value) || 0;
+
+
+        let shares = 0;
+
+
+        shareInputs.forEach(input => {
+
+            shares +=
+                parseFloat(input.value) || 0;
+
+        });
+
+
+        if (total <= 0) {
+
+            totalCheck.innerHTML =
+                "Enter total amount first.";
+
+            totalCheck.className =
+                "total-check";
+
+            return;
+
+        }
+
+
+        const difference =
+            Math.abs(total - shares);
+
+
+        if (difference < 0.01) {
+
+            totalCheck.innerHTML =
+                "✅ Split matches total: ₹" +
+                shares.toFixed(2);
+
+            totalCheck.className =
+                "total-check valid";
+
+        }
+
+        else {
+
+            totalCheck.innerHTML =
+                "⚠️ Split total: ₹" +
+                shares.toFixed(2) +
+                " / Expense: ₹" +
+                total.toFixed(2);
+
+            totalCheck.className =
+                "total-check invalid";
+
+        }
+
+    }
+
+
+    totalInput.addEventListener(
+        "input",
+        function() {
+
+            const active =
+                document.querySelector(
+                    ".split-option.active"
+                );
+
+            if (active) {
+
+                if (
+                    active.innerText.includes("50")
+                ) {
+
+                    setSplit(
+                        "5050",
+                        active
+                    );
+
+                }
+
+                else if (
+                    active.innerText.includes("100")
+                ) {
+
+                    setSplit(
+                        "1000",
+                        active
+                    );
+
+                }
+
+            }
+
+            checkTotal();
+
+        }
+    );
+
+
+    shareInputs.forEach(input => {
+
+        input.addEventListener(
+            "input",
+            checkTotal
+        );
+
+    });
+
+
+    totalInput.addEventListener(
+        "input",
+        checkTotal
+    );
+
+</script>
 
 </body>
+
 </html>
