@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Edit Expense</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 25px 20px;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #172033;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #687386;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+        }
+
+        label {
+            display: block;
+            margin-top: 17px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px;
+            margin-top: 7px;
+            border: 1px solid #dfe3ea;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #172033;
+        }
+
+        h2 {
+            margin-top: 30px;
+            font-size: 20px;
+        }
+
+        .button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 14px;
+            border: none;
+            border-radius: 11px;
+            background: #172033;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .message {
+            background: #ffe8e8;
+            color: #a40000;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <a
+        class="back"
+        href="{% url 'home' %}"
+    >
+        ← Back to Home
+    </a>
+
+
+    <h1>✏️ Edit Expense</h1>
+
+    <div class="subtitle">
+        Update the expense details and split.
+    </div>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <div class="card">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+
+            <label>
+                What was it for?
+            </label>
+
+            <input
+                type="text"
+                name="description"
+                value="{{ expense.description }}"
+                required
+            >
+
+
+            <label>
+                Total amount (₹)
+            </label>
+
+            <input
+                type="number"
+                name="amount"
+                step="0.01"
+                min="0.01"
+                value="{{ expense.amount_paise|floatformat:2 }}"
+                required
+            >
+
+
+            <label>
+                Who paid?
+            </label>
+
+            <select
+                name="paid_by"
+                required
+            >
+
+                {% for person in people %}
+
+                    <option
+                        value="{{ person.id }}"
+                        {% if person.id == expense.paid_by_id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ person.name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+
+            <label>
+                Date
+            </label>
+
+            <input
+                type="date"
+                name="expense_date"
+                value="{{ expense.expense_date|date:'Y-m-d' }}"
+                required
+            >
+
+
+            <h2>
+                How should it be split?
+            </h2>
+
+
+            {% for item in share_data %}
+
+                <label>
+                    {{ item.person.name }}'s share (₹)
+                </label>
+
+                <input
+                    type="number"
+                    name="share_{{ item.person.id }}"
+                    step="0.01"
+                    min="0"
+                    value="{{ item.amount_rupees }}"
+                    required
+                >
+
+            {% endfor %}
+
+
+            <button
+                class="button"
+                type="submit"
+            >
+                💾 Save Changes
+            </button>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>

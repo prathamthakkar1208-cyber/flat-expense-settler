@@ -2,23 +2,38 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Flat Expense Settler</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", Arial, sans-serif;
+
             background:
-                radial-gradient(circle at top left, #252052 0, transparent 35%),
-                radial-gradient(circle at top right, #172554 0, transparent 30%),
+                radial-gradient(
+                    circle at top left,
+                    #252052 0,
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at top right,
+                    #172554 0,
+                    transparent 30%
+                ),
                 #080b16;
+
             color: #f8fafc;
             min-height: 100vh;
         }
@@ -54,12 +69,24 @@
         .logo {
             width: 55px;
             height: 55px;
+
             display: grid;
             place-items: center;
+
             border-radius: 18px;
-            background: linear-gradient(135deg, #7c3aed, #2563eb);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
             font-size: 27px;
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
+
+            box-shadow:
+                0 12px 35px
+                rgba(99, 102, 241, 0.3);
         }
 
         /* MESSAGE */
@@ -68,8 +95,11 @@
             background: rgba(34, 197, 94, 0.12);
             border: 1px solid rgba(34, 197, 94, 0.25);
             color: #86efac;
+
             padding: 14px 18px;
+
             border-radius: 14px;
+
             margin-bottom: 20px;
         }
 
@@ -78,39 +108,68 @@
         .balance-card {
             position: relative;
             overflow: hidden;
+
             padding: 30px;
+
             border-radius: 24px;
-            background: linear-gradient(135deg, #312e81, #4c1d95);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #312e81,
+                    #4c1d95
+                );
+
+            box-shadow:
+                0 25px 60px
+                rgba(0, 0, 0, 0.35);
+
             margin-bottom: 25px;
         }
 
         .balance-card::after {
             content: "";
+
             position: absolute;
+
             width: 220px;
             height: 220px;
+
             border-radius: 50%;
-            background: rgba(255,255,255,0.08);
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
             right: -80px;
             top: -80px;
         }
 
         .balance-title {
             color: #c4b5fd;
+
             font-size: 14px;
+
             text-transform: uppercase;
+
             letter-spacing: 1px;
+
             margin-bottom: 20px;
         }
 
         .person-balance {
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             gap: 15px;
+
             padding: 15px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.12);
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,0.12);
         }
 
         .person-balance:last-child {
@@ -140,63 +199,108 @@
 
         .actions {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
             gap: 14px;
+
             margin-bottom: 30px;
         }
 
         .button {
             text-decoration: none;
+
             color: white;
+
             padding: 17px 20px;
+
             border-radius: 15px;
+
             text-align: center;
+
             font-weight: 700;
-            transition: 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.06);
+
+            transition:
+                0.2s ease;
+
+            border:
+                1px solid
+                rgba(255,255,255,0.08);
+
+            background:
+                rgba(255,255,255,0.06);
+
             backdrop-filter: blur(10px);
         }
 
         .button:hover {
             transform: translateY(-3px);
-            background: rgba(255,255,255,0.1);
+
+            background:
+                rgba(255,255,255,0.1);
         }
 
         .primary {
-            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            background:
+                linear-gradient(
+                    135deg,
+                    #7c3aed,
+                    #2563eb
+                );
+
             border: none;
-            box-shadow: 0 12px 30px rgba(79, 70, 229, 0.3);
+
+            box-shadow:
+                0 12px 30px
+                rgba(79, 70, 229, 0.3);
         }
 
         /* SECTIONS */
 
         .section {
-            background: rgba(15, 23, 42, 0.78);
-            border: 1px solid rgba(255,255,255,0.07);
+            background:
+                rgba(15, 23, 42, 0.78);
+
+            border:
+                1px solid
+                rgba(255,255,255,0.07);
+
             border-radius: 22px;
+
             padding: 25px;
+
             margin-bottom: 22px;
+
             backdrop-filter: blur(15px);
         }
 
         .section-header {
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-bottom: 18px;
         }
 
         .section h2 {
             margin: 0;
+
             font-size: 19px;
         }
 
         .badge {
             color: #a5b4fc;
-            background: rgba(99,102,241,0.12);
+
+            background:
+                rgba(99,102,241,0.12);
+
             padding: 6px 10px;
+
             border-radius: 8px;
+
             font-size: 12px;
         }
 
@@ -204,36 +308,122 @@
 
         .expense {
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             gap: 20px;
+
             padding: 17px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,0.07);
         }
 
         .expense:last-child {
             border-bottom: none;
         }
 
+        .expense-left {
+            flex: 1;
+        }
+
         .expense-title {
             font-weight: 700;
+
             margin-bottom: 5px;
         }
 
         .expense-info {
             color: #94a3b8;
+
             font-size: 14px;
+        }
+
+        .expense-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
         }
 
         .expense-amount {
             font-size: 18px;
+
             font-weight: 800;
+
             white-space: nowrap;
         }
 
+        /* EDIT DELETE */
+
+        .expense-actions {
+            display: flex;
+
+            gap: 8px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            text-decoration: none;
+
+            padding: 8px 11px;
+
+            border-radius: 9px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            transition: 0.2s ease;
+        }
+
+        .edit-btn {
+            color: #c4b5fd;
+
+            background:
+                rgba(124,58,237,0.15);
+
+            border:
+                1px solid
+                rgba(124,58,237,0.25);
+        }
+
+        .edit-btn:hover {
+            background:
+                rgba(124,58,237,0.3);
+
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            color: #fca5a5;
+
+            background:
+                rgba(239,68,68,0.12);
+
+            border:
+                1px solid
+                rgba(239,68,68,0.2);
+        }
+
+        .delete-btn:hover {
+            background:
+                rgba(239,68,68,0.25);
+
+            transform: translateY(-2px);
+        }
+
+        /* EMPTY */
+
         .empty {
             color: #64748b;
+
             text-align: center;
+
             padding: 20px 0;
         }
 
@@ -241,17 +431,21 @@
 
         .footer {
             text-align: center;
+
             color: #475569;
+
             font-size: 13px;
+
             margin-top: 30px;
         }
 
         /* MOBILE */
 
-        @media (max-width: 650px) {
+        @media (max-width: 700px) {
 
             .container {
-                padding: 25px 15px 40px;
+                padding:
+                    25px 15px 40px;
             }
 
             .header {
@@ -265,6 +459,7 @@
             .logo {
                 width: 48px;
                 height: 48px;
+
                 font-size: 23px;
             }
 
@@ -278,29 +473,42 @@
 
             .expense {
                 align-items: flex-start;
+                flex-direction: column;
             }
 
-            .expense-amount {
-                font-size: 16px;
+            .expense-right {
+                width: 100%;
+
+                justify-content:
+                    space-between;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
 <div class="container">
+
 
     <!-- HEADER -->
 
     <div class="header">
 
         <div class="brand">
-            <h1>Flat Expense Settler 💰</h1>
+
+            <h1>
+                Flat Expense Settler 💰
+            </h1>
 
             <p>
                 Track expenses. Split fairly. Settle easily.
             </p>
+
         </div>
 
         <div class="logo">
@@ -333,6 +541,7 @@
             Current Balance
         </div>
 
+
         {% for item in balance_data %}
 
             <div class="person-balance">
@@ -340,6 +549,7 @@
                 <div class="person-name">
                     {{ item.name }}
                 </div>
+
 
                 {% if item.balance_paise > 0 %}
 
@@ -378,12 +588,14 @@
 
     <div class="actions">
 
+
         <a
             class="button"
             href="{% url 'add_person' %}"
         >
             👤 Add Flatmate
         </a>
+
 
         <a
             class="button primary"
@@ -392,12 +604,14 @@
             + Add Expense 💸
         </a>
 
+
         <a
             class="button"
             href="{% url 'settle_up' %}"
         >
             💸 Settle Up
         </a>
+
 
     </div>
 
@@ -418,28 +632,65 @@
 
         </div>
 
+
         {% for expense in recent_expenses %}
 
             <div class="expense">
 
-                <div>
+
+                <div class="expense-left">
 
                     <div class="expense-title">
                         {{ expense.description }}
                     </div>
 
                     <div class="expense-info">
-                        Paid by {{ expense.paid_by.name }}
-                        · {{ expense.expense_date }}
+
+                        Paid by
+                        {{ expense.paid_by.name }}
+
+                        ·
+
+                        {{ expense.expense_date }}
+
                     </div>
 
                 </div>
 
-                <div class="expense-amount">
-                    ₹{{ expense.amount_rupees|floatformat:2 }}
+
+                <div class="expense-right">
+
+                    <div class="expense-amount">
+
+                        ₹{{ expense.amount_rupees|floatformat:2 }}
+
+                    </div>
+
+
+                    <div class="expense-actions">
+
+                        <a
+                            class="edit-btn"
+                            href="{% url 'edit_expense' expense.id %}"
+                        >
+                            ✏️ Edit
+                        </a>
+
+
+                        <a
+                            class="delete-btn"
+                            href="{% url 'delete_expense' expense.id %}"
+                            onclick="return confirm('Are you sure you want to delete this expense?');"
+                        >
+                            🗑️ Delete
+                        </a>
+
+                    </div>
+
                 </div>
 
             </div>
+
 
         {% empty %}
 
@@ -449,10 +700,11 @@
 
         {% endfor %}
 
+
     </div>
 
 
-    <!-- SETTLEMENTS -->
+    <!-- RECENT SETTLEMENTS -->
 
     <div class="section">
 
@@ -468,32 +720,49 @@
 
         </div>
 
+
         {% for settlement in recent_settlements %}
 
             <div class="expense">
 
-                <div>
+
+                <div class="expense-left">
 
                     <div class="expense-title">
+
                         {{ settlement.paid_by.name }}
-                        → {{ settlement.paid_to.name }}
+
+                        →
+
+                        {{ settlement.paid_to.name }}
+
                     </div>
 
+
                     <div class="expense-info">
+
                         {{ settlement.settlement_date }}
 
                         {% if settlement.note %}
+
                             · {{ settlement.note }}
+
                         {% endif %}
+
                     </div>
 
                 </div>
 
+
                 <div class="expense-amount">
+
                     ₹{{ settlement.amount_rupees|floatformat:2 }}
+
                 </div>
 
+
             </div>
+
 
         {% empty %}
 
@@ -503,12 +772,17 @@
 
         {% endfor %}
 
+
     </div>
 
 
     <div class="footer">
-        Flat Expense Settler · Made for hassle-free flat expenses 🏠
+
+        Flat Expense Settler ·
+        Made for hassle-free flat expenses 🏠
+
     </div>
+
 
 </div>
 
