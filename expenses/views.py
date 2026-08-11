@@ -14,13 +14,18 @@ def money_to_paise(value):
     except (InvalidOperation, TypeError, ValueError):
         raise ValueError("Please enter a valid amount.")
 
-    if amount <= 0:
-        raise ValueError("Amount must be greater than ₹0.")
+    if amount < 0:
+        raise ValueError("Amount cannot be negative.")
 
     return int(amount * 100)
 
 
+# =========================
+# HOME
+# =========================
+
 def home(request):
+
     people = list(
         Person.objects.all().order_by("id")
     )
@@ -30,30 +35,24 @@ def home(request):
         for person in people
     }
 
-    # -------------------------
-    # EXPENSE BALANCES
-    # -------------------------
-
+    # Expenses
     for expense in Expense.objects.all():
 
         balances[expense.paid_by_id] += expense.amount_paise
 
         for share in expense.shares.all():
-            balances[share.person_id] -= share.amount_paise
 
-    # -------------------------
-    # SETTLEMENT BALANCES
-    # -------------------------
+            if share.person_id in balances:
+                balances[share.person_id] -= share.amount_paise
 
+    # Settlements
     for settlement in Settlement.objects.all():
 
-        balances[settlement.paid_by_id] += settlement.amount_paise
+        if settlement.paid_by_id in balances:
+            balances[settlement.paid_by_id] += settlement.amount_paise
 
-        balances[settlement.paid_to_id] -= settlement.amount_paise
-
-    # -------------------------
-    # BALANCE DATA
-    # -------------------------
+        if settlement.paid_to_id in balances:
+            balances[settlement.paid_to_id] -= settlement.amount_paise
 
     balance_data = []
 
@@ -67,45 +66,24 @@ def home(request):
             "balance_rupees": abs(balance_paise) / 100,
         })
 
-    # -------------------------
-    # RECENT EXPENSES
-    # -------------------------
-
     recent_expenses = list(
         Expense.objects
         .select_related("paid_by")
         .prefetch_related("shares__person")
-        .order_by(
-            "-expense_date",
-            "-created_at"
-        )[:20]
+        .order_by("-expense_date", "-created_at")[:20]
     )
 
     for expense in recent_expenses:
-        expense.amount_rupees = (
-            expense.amount_paise / 100
-        )
-
-    # -------------------------
-    # RECENT SETTLEMENTS
-    # -------------------------
+        expense.amount_rupees = expense.amount_paise / 100
 
     recent_settlements = list(
         Settlement.objects
-        .select_related(
-            "paid_by",
-            "paid_to"
-        )
-        .order_by(
-            "-settlement_date",
-            "-created_at"
-        )[:20]
+        .select_related("paid_by", "paid_to")
+        .order_by("-settlement_date", "-created_at")[:20]
     )
 
     for settlement in recent_settlements:
-        settlement.amount_rupees = (
-            settlement.amount_paise / 100
-        )
+        settlement.amount_rupees = settlement.amount_paise / 100
 
     return render(
         request,
@@ -118,9 +96,9 @@ def home(request):
     )
 
 
-# =========================================================
+# =========================
 # ADD PERSON
-# =========================================================
+# =========================
 
 def add_person(request):
 
@@ -174,9 +152,9 @@ def add_person(request):
     )
 
 
-# =========================================================
+# =========================
 # ADD EXPENSE
-# =========================================================
+# =========================
 
 def add_expense(request):
 
@@ -213,10 +191,6 @@ def add_expense(request):
             "expense_date"
         )
 
-        # -------------------------
-        # DESCRIPTION
-        # -------------------------
-
         if not description:
 
             messages.error(
@@ -224,13 +198,7 @@ def add_expense(request):
                 "Please enter what the expense was for."
             )
 
-            return redirect(
-                "add_expense"
-            )
-
-        # -------------------------
-        # AMOUNT
-        # -------------------------
+            return redirect("add_expense")
 
         try:
 
@@ -245,22 +213,21 @@ def add_expense(request):
                 str(error)
             )
 
-            return redirect(
-                "add_expense"
+            return redirect("add_expense")
+
+        if amount_paise <= 0:
+
+            messages.error(
+                request,
+                "Amount must be greater than ₹0."
             )
 
-        # -------------------------
-        # PAID BY
-        # -------------------------
+            return redirect("add_expense")
 
         paid_by = get_object_or_404(
             Person,
             id=paid_by_id
         )
-
-        # -------------------------
-        # SHARES
-        # -------------------------
 
         share_values = {}
 
@@ -268,13 +235,13 @@ def add_expense(request):
 
             for person in people:
 
-                share_values[
-                    person.id
-                ] = money_to_paise(
-                    request.POST.get(
-                        f"share_{person.id}",
-                        "0"
-                    )
+                value = request.POST.get(
+                    f"share_{person.id}",
+                    "0"
+                )
+
+                share_values[person.id] = money_to_paise(
+                    value
                 )
 
         except ValueError:
@@ -284,36 +251,20 @@ def add_expense(request):
                 "Please enter valid amounts for all shares."
             )
 
-            return redirect(
-                "add_expense"
-            )
+            return redirect("add_expense")
 
-        # -------------------------
-        # CHECK TOTAL
-        # -------------------------
-
-        if sum(
-            share_values.values()
-        ) != amount_paise:
+        if sum(share_values.values()) != amount_paise:
 
             messages.error(
                 request,
                 "The split amounts must add up exactly to the total expense."
             )
 
-            return redirect(
-                "add_expense"
-            )
+            return redirect("add_expense")
 
         if not expense_date:
 
-            expense_date = (
-                timezone.localdate()
-            )
-
-        # -------------------------
-        # CREATE EXPENSE
-        # -------------------------
+            expense_date = timezone.localdate()
 
         with transaction.atomic():
 
@@ -329,9 +280,7 @@ def add_expense(request):
                 ExpenseShare.objects.create(
                     expense=expense,
                     person=person,
-                    amount_paise=share_values[
-                        person.id
-                    ],
+                    amount_paise=share_values[person.id],
                 )
 
         messages.success(
@@ -351,32 +300,39 @@ def add_expense(request):
     )
 
 
-# =========================================================
+# =========================
 # EDIT EXPENSE
-# =========================================================
+# =========================
 
-def edit_expense(
-    request,
-    expense_id
-):
-
-    people = list(
-        Person.objects.all().order_by("id")
-    )
+def edit_expense(request, expense_id):
 
     expense = get_object_or_404(
         Expense,
         id=expense_id
     )
 
-    existing_shares = {
+    people = list(
+        Person.objects.all().order_by("id")
+    )
+
+    shares = {
         share.person_id: share.amount_paise
         for share in expense.shares.all()
     }
 
-    # -------------------------
-    # POST
-    # -------------------------
+    share_data = []
+
+    for person in people:
+
+        amount_paise = shares.get(
+            person.id,
+            0
+        )
+
+        share_data.append({
+            "person": person,
+            "amount_rupees": f"{amount_paise / 100:.2f}",
+        })
 
     if request.method == "POST":
 
@@ -398,10 +354,6 @@ def edit_expense(
             "expense_date"
         )
 
-        # -------------------------
-        # DESCRIPTION
-        # -------------------------
-
         if not description:
 
             messages.error(
@@ -413,10 +365,6 @@ def edit_expense(
                 "edit_expense",
                 expense_id=expense.id
             )
-
-        # -------------------------
-        # AMOUNT
-        # -------------------------
 
         try:
 
@@ -436,18 +384,22 @@ def edit_expense(
                 expense_id=expense.id
             )
 
-        # -------------------------
-        # PAID BY
-        # -------------------------
+        if amount_paise <= 0:
+
+            messages.error(
+                request,
+                "Amount must be greater than ₹0."
+            )
+
+            return redirect(
+                "edit_expense",
+                expense_id=expense.id
+            )
 
         paid_by = get_object_or_404(
             Person,
             id=paid_by_id
         )
-
-        # -------------------------
-        # SHARES
-        # -------------------------
 
         share_values = {}
 
@@ -455,13 +407,13 @@ def edit_expense(
 
             for person in people:
 
-                share_values[
-                    person.id
-                ] = money_to_paise(
-                    request.POST.get(
-                        f"share_{person.id}",
-                        "0"
-                    )
+                value = request.POST.get(
+                    f"share_{person.id}",
+                    "0"
+                )
+
+                share_values[person.id] = money_to_paise(
+                    value
                 )
 
         except ValueError:
@@ -476,13 +428,7 @@ def edit_expense(
                 expense_id=expense.id
             )
 
-        # -------------------------
-        # CHECK TOTAL
-        # -------------------------
-
-        if sum(
-            share_values.values()
-        ) != amount_paise:
+        if sum(share_values.values()) != amount_paise:
 
             messages.error(
                 request,
@@ -496,48 +442,25 @@ def edit_expense(
 
         if not expense_date:
 
-            expense_date = (
-                timezone.localdate()
-            )
-
-        # -------------------------
-        # UPDATE
-        # -------------------------
+            expense_date = timezone.localdate()
 
         with transaction.atomic():
 
-            expense.description = (
-                description
-            )
-
-            expense.amount_paise = (
-                amount_paise
-            )
-
-            expense.paid_by = (
-                paid_by
-            )
-
-            expense.expense_date = (
-                expense_date
-            )
+            expense.description = description
+            expense.amount_paise = amount_paise
+            expense.paid_by = paid_by
+            expense.expense_date = expense_date
 
             expense.save()
 
-            # Delete old shares
-
             expense.shares.all().delete()
-
-            # Create new shares
 
             for person in people:
 
                 ExpenseShare.objects.create(
                     expense=expense,
                     person=person,
-                    amount_paise=share_values[
-                        person.id
-                    ],
+                    amount_paise=share_values[person.id],
                 )
 
         messages.success(
@@ -546,24 +469,6 @@ def edit_expense(
         )
 
         return redirect("home")
-
-    # -------------------------
-    # PREPARE SHARE DATA
-    # -------------------------
-
-    share_data = []
-
-    for person in people:
-
-        share_paise = existing_shares.get(
-            person.id,
-            0
-        )
-
-        share_data.append({
-            "person": person,
-            "amount_rupees": share_paise / 100,
-        })
 
     return render(
         request,
@@ -576,14 +481,11 @@ def edit_expense(
     )
 
 
-# =========================================================
+# =========================
 # DELETE EXPENSE
-# =========================================================
+# =========================
 
-def delete_expense(
-    request,
-    expense_id
-):
+def delete_expense(request, expense_id):
 
     expense = get_object_or_404(
         Expense,
@@ -599,12 +501,20 @@ def delete_expense(
             "Expense deleted successfully! 🗑️"
         )
 
-    return redirect("home")
+        return redirect("home")
+
+    return render(
+        request,
+        "expenses/delete_expense.html",
+        {
+            "expense": expense,
+        },
+    )
 
 
-# =========================================================
+# =========================
 # SETTLE UP
-# =========================================================
+# =========================
 
 def settle_up(request):
 
@@ -641,10 +551,6 @@ def settle_up(request):
             ""
         ).strip()
 
-        # -------------------------
-        # SAME PERSON CHECK
-        # -------------------------
-
         if paid_by_id == paid_to_id:
 
             messages.error(
@@ -652,13 +558,7 @@ def settle_up(request):
                 "The person paying and receiving cannot be the same."
             )
 
-            return redirect(
-                "settle_up"
-            )
-
-        # -------------------------
-        # AMOUNT
-        # -------------------------
+            return redirect("settle_up")
 
         try:
 
@@ -673,9 +573,16 @@ def settle_up(request):
                 str(error)
             )
 
-            return redirect(
-                "settle_up"
+            return redirect("settle_up")
+
+        if amount_paise <= 0:
+
+            messages.error(
+                request,
+                "Amount must be greater than ₹0."
             )
+
+            return redirect("settle_up")
 
         paid_by = get_object_or_404(
             Person,
@@ -686,10 +593,6 @@ def settle_up(request):
             Person,
             id=paid_to_id
         )
-
-        # -------------------------
-        # CREATE SETTLEMENT
-        # -------------------------
 
         Settlement.objects.create(
             paid_by=paid_by,
@@ -714,148 +617,3 @@ def settle_up(request):
             "today": timezone.localdate().isoformat(),
         },
     )
-def edit_expense(request, expense_id):
-    expense = get_object_or_404(
-        Expense.objects.prefetch_related("shares"),
-        id=expense_id
-    )
-
-    people = list(Person.objects.all().order_by("id"))
-
-    if request.method == "POST":
-
-        description = request.POST.get(
-            "description",
-            ""
-        ).strip()
-
-        amount = request.POST.get(
-            "amount",
-            ""
-        ).strip()
-
-        paid_by_id = request.POST.get("paid_by")
-        expense_date = request.POST.get("expense_date")
-
-        if not description:
-            messages.error(
-                request,
-                "Please enter what the expense was for."
-            )
-            return redirect(
-                "edit_expense",
-                expense_id=expense.id
-            )
-
-        try:
-            amount_paise = money_to_paise(amount)
-        except ValueError as error:
-            messages.error(request, str(error))
-            return redirect(
-                "edit_expense",
-                expense_id=expense.id
-            )
-
-        paid_by = get_object_or_404(
-            Person,
-            id=paid_by_id
-        )
-
-        share_values = {}
-
-        try:
-            for person in people:
-
-                share_values[person.id] = money_to_paise(
-                    request.POST.get(
-                        f"share_{person.id}",
-                        "0"
-                    )
-                )
-
-        except ValueError:
-
-            messages.error(
-                request,
-                "Please enter valid amounts for all shares."
-            )
-
-            return redirect(
-                "edit_expense",
-                expense_id=expense.id
-            )
-
-        if sum(share_values.values()) != amount_paise:
-
-            messages.error(
-                request,
-                "The split amounts must add up exactly to the total expense."
-            )
-
-            return redirect(
-                "edit_expense",
-                expense_id=expense.id
-            )
-
-        if not expense_date:
-            expense_date = timezone.localdate()
-
-        with transaction.atomic():
-
-            expense.description = description
-            expense.amount_paise = amount_paise
-            expense.paid_by = paid_by
-            expense.expense_date = expense_date
-
-            expense.save()
-
-            expense.shares.all().delete()
-
-            for person in people:
-
-                ExpenseShare.objects.create(
-                    expense=expense,
-                    person=person,
-                    amount_paise=share_values[person.id],
-                )
-
-        messages.success(
-            request,
-            "Expense updated successfully! ✅"
-        )
-
-        return redirect("home")
-
-    existing_shares = {
-        share.person_id: share.amount_paise / 100
-        for share in expense.shares.all()
-    }
-
-    return render(
-        request,
-        "expenses/edit_expense.html",
-        {
-            "expense": expense,
-            "people": people,
-            "existing_shares": existing_shares,
-        },
-    )
-
-
-def delete_expense(request, expense_id):
-
-    expense = get_object_or_404(
-        Expense,
-        id=expense_id
-    )
-
-    description = expense.description
-
-    expense.delete()
-
-    messages.success(
-        request,
-        f'"{description}" deleted successfully! 🗑️'
-    )
-
-    return redirect("home")
