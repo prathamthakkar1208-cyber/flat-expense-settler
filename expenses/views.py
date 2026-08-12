@@ -1,12 +1,18 @@
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.contrib import messages
+from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .models import Expense, ExpenseShare, Person, Settlement
 
+
+# =========================
+# MONEY HELPER
+# =========================
 
 def money_to_paise(value):
     try:
@@ -18,6 +24,46 @@ def money_to_paise(value):
         raise ValueError("Amount cannot be negative.")
 
     return int(amount * 100)
+
+
+# =========================
+# EMAIL HELPER
+# =========================
+
+def send_notification_email(subject, message):
+    try:
+        recipient = getattr(
+            settings,
+            "EXPENSE_NOTIFICATION_EMAIL",
+            None
+        )
+
+        sender = getattr(
+            settings,
+            "DEFAULT_FROM_EMAIL",
+            None
+        )
+
+        if not recipient:
+            print("EMAIL ERROR: EXPENSE_NOTIFICATION_EMAIL is not configured.")
+            return
+
+        if not sender:
+            print("EMAIL ERROR: DEFAULT_FROM_EMAIL is not configured.")
+            return
+
+        send_mail(
+            subject,
+            message,
+            sender,
+            [recipient],
+            fail_silently=False,
+        )
+
+        print("EMAIL SENT SUCCESSFULLY")
+
+    except Exception as error:
+        print("EMAIL ERROR:", error)
 
 
 # =========================
@@ -38,7 +84,8 @@ def home(request):
     # Expenses
     for expense in Expense.objects.all():
 
-        balances[expense.paid_by_id] += expense.amount_paise
+        if expense.paid_by_id in balances:
+            balances[expense.paid_by_id] += expense.amount_paise
 
         for share in expense.shares.all():
 
@@ -202,9 +249,7 @@ def add_expense(request):
 
         try:
 
-            amount_paise = money_to_paise(
-                amount
-            )
+            amount_paise = money_to_paise(amount)
 
         except ValueError as error:
 
@@ -282,6 +327,21 @@ def add_expense(request):
                     person=person,
                     amount_paise=share_values[person.id],
                 )
+
+        # EMAIL
+        send_notification_email(
+            "💰 New Expense Added - Flat Expense Settler",
+            f"""
+A new expense has been added.
+
+Expense: {description}
+Amount: ₹{amount_paise / 100:.2f}
+Paid by: {paid_by.name}
+Date: {expense_date}
+
+The expense has been successfully added.
+"""
+        )
 
         messages.success(
             request,
@@ -368,9 +428,7 @@ def edit_expense(request, expense_id):
 
         try:
 
-            amount_paise = money_to_paise(
-                amount
-            )
+            amount_paise = money_to_paise(amount)
 
         except ValueError as error:
 
@@ -463,6 +521,21 @@ def edit_expense(request, expense_id):
                     amount_paise=share_values[person.id],
                 )
 
+        # EMAIL
+        send_notification_email(
+            "✏️ Expense Updated - Flat Expense Settler",
+            f"""
+An expense has been updated.
+
+Expense: {description}
+Amount: ₹{amount_paise / 100:.2f}
+Paid by: {paid_by.name}
+Date: {expense_date}
+
+The expense has been successfully updated.
+"""
+        )
+
         messages.success(
             request,
             "Expense updated successfully! ✅"
@@ -494,7 +567,25 @@ def delete_expense(request, expense_id):
 
     if request.method == "POST":
 
+        description = expense.description
+        amount = expense.amount_paise / 100
+        paid_by = expense.paid_by.name
+
         expense.delete()
+
+        # EMAIL
+        send_notification_email(
+            "🗑️ Expense Deleted - Flat Expense Settler",
+            f"""
+An expense has been deleted.
+
+Expense: {description}
+Amount: ₹{amount:.2f}
+Paid by: {paid_by}
+
+The expense has been successfully deleted.
+"""
+        )
 
         messages.success(
             request,
@@ -600,6 +691,22 @@ def settle_up(request):
             amount_paise=amount_paise,
             settlement_date=timezone.localdate(),
             note=note,
+        )
+
+        # EMAIL
+        send_notification_email(
+            "💸 Settlement Recorded - Flat Expense Settler",
+            f"""
+A settlement has been recorded.
+
+Paid by: {paid_by.name}
+Paid to: {paid_to.name}
+Amount: ₹{amount_paise / 100:.2f}
+Date: {timezone.localdate()}
+Note: {note if note else "No note"}
+
+The settlement has been successfully recorded.
+"""
         )
 
         messages.success(
