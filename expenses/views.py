@@ -1,9 +1,10 @@
 import os
 
+import requests
+
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
-from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -38,16 +39,23 @@ def money_to_paise(value):
 
 
 # =========================
-# EMAIL NOTIFICATION
+# EMAIL NOTIFICATION (Brevo HTTP API)
 # =========================
+# Render's free web service tier blocks outbound SMTP ports
+# (25/465/587), so django.core.mail's SMTP backend can't be used
+# on the free plan. Brevo sends over plain HTTPS instead, which is
+# not blocked, and its free tier covers up to 300 emails/day.
+
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
+
 
 def send_expense_notification(subject, message, recipient_email=None):
     """
-    Sends a notification email to `recipient_email` (the person tied
-    to the expense, e.g. expense.paid_by.email). Falls back to the
-    EXPENSE_NOTIFICATION_EMAIL env var if the person has no email on
-    file, so nothing silently breaks for flatmates who haven't added
-    one yet.
+    Sends a notification email via Brevo to `recipient_email` (the
+    person tied to the expense, e.g. expense.paid_by.email). Falls
+    back to the EXPENSE_NOTIFICATION_EMAIL env var if the person has
+    no email on file, so nothing silently breaks for flatmates who
+    haven't added one yet.
     """
 
     try:
@@ -60,15 +68,35 @@ def send_expense_notification(subject, message, recipient_email=None):
             "EMAIL_HOST_USER"
         )
 
-        if not recipient or not sender:
+        api_key = os.environ.get(
+            "BREVO_API_KEY"
+        )
+
+        if not recipient or not sender or not api_key:
             return
 
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=sender,
-            recipient_list=[recipient],
-            fail_silently=True,
+        payload = {
+            "sender": {
+                "email": sender
+            },
+            "to": [
+                {"email": recipient}
+            ],
+            "subject": subject,
+            "textContent": message,
+        }
+
+        headers = {
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json",
+        }
+
+        requests.post(
+            BREVO_API_URL,
+            json=payload,
+            headers=headers,
+            timeout=10,
         )
 
     except Exception:
@@ -814,3 +842,4 @@ def settle_up(request):
             "today": timezone.localdate().isoformat(),
         },
     )
+echo "requests" >> requirements.txt
