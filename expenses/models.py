@@ -3,6 +3,11 @@ from django.db import models
 
 class Person(models.Model):
     name = models.CharField(max_length=100)
+    email = models.EmailField(
+        blank=True,
+        null=True,
+        help_text="Used to send add/edit/delete expense notifications."
+    )
 
     def __str__(self):
         return self.name
